@@ -1,0 +1,203 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Nagad biometric login prototype</title>
+<style>
+:root{--bg:#f6efe9;--surf:#fff;--ink:#1d1a18;--mute:#6f655e;--line:#eadfd6;--or:#f26522;--or2:#d9511a;--ok:#1f9d55;--err:#d93a2f;--soft:#fdeee5;
+box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}
+@media(prefers-color-scheme:dark){:root:not([data-theme="light"]){--bg:#17120f;--surf:#241d19;--ink:#f5ede7;--mute:#a79a90;--line:#382e27;--soft:#3a2418}}
+:root[data-theme="dark"]{--bg:#17120f;--surf:#241d19;--ink:#f5ede7;--mute:#a79a90;--line:#382e27;--soft:#3a2418}
+*{box-sizing:border-box;margin:0}
+html,body{height:100%}
+body{background:var(--bg);color:var(--ink);font-family:"Segoe UI",system-ui,-apple-system,Roboto,sans-serif;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:14px;padding:12px}
+.note{font-size:13px;color:var(--mute);text-align:center;max-width:380px;line-height:1.4}
+.note b{color:var(--ink)}
+.phone{width:100%;max-width:380px;height:min(740px,calc(100vh - 90px));min-height:560px;background:var(--surf);border-radius:34px;border:8px solid #1d1a18;position:relative;overflow:hidden;display:flex;flex-direction:column}
+.scr{display:none;flex:1;flex-direction:column;min-height:0}
+.scr.on{display:flex}
+.logo{display:flex;flex-direction:column;align-items:center;gap:6px;margin-top:56px}
+.mark{width:72px;height:72px;border-radius:50%;background:var(--or);display:grid;place-items:center;color:#fff;font-weight:800;font-size:34px}
+.brand{font-size:26px;font-weight:800;color:var(--or)}
+.center{flex:1;display:flex;flex-direction:column;justify-content:flex-end;padding:24px 22px 18px;gap:10px}
+h1{font-size:22px;text-align:center}
+.sub{text-align:center;color:var(--mute);font-size:14px;margin-bottom:10px}
+button{font:inherit;cursor:pointer;border:0;border-radius:12px;padding:14px;font-weight:600;font-size:15px}
+button:focus-visible{outline:3px solid var(--or);outline-offset:2px}
+.pri{background:var(--or);color:#fff}.pri:active{background:var(--or2)}
+.sec{background:var(--surf);color:var(--ink);border:1.5px solid var(--line)}
+.lnk{background:none;color:var(--or);padding:8px;font-size:14px}
+.foot{text-align:center;font-size:12px;color:var(--mute);padding-top:6px}
+.sheetwrap{position:absolute;inset:0;background:rgba(0,0,0,.55);display:none;align-items:flex-end;z-index:5}
+.sheetwrap.on{display:flex}
+.sheet{width:100%;background:var(--surf);border-radius:24px 24px 0 0;padding:22px 20px 24px;text-align:center;animation:up .22s ease-out}
+@keyframes up{from{transform:translateY(40px);opacity:0}}
+.seg{display:flex;background:var(--bg);border-radius:10px;padding:3px;margin:0 auto 14px;width:max-content}
+.seg button{padding:7px 16px;border-radius:8px;background:none;color:var(--mute);font-size:13px}
+.seg button.on{background:var(--surf);color:var(--ink);box-shadow:0 1px 3px rgba(0,0,0,.15)}
+.sensor{width:92px;height:92px;border-radius:50%;background:var(--soft);margin:10px auto;display:grid;place-items:center;border:0;position:relative;color:var(--or)}
+.sensor svg{width:48px;height:48px}
+.sensor.scan::after{content:"";position:absolute;inset:-6px;border-radius:50%;border:3px solid var(--or);border-top-color:transparent;animation:sp .8s linear infinite}
+.sensor.ok{background:var(--ok);color:#fff}.sensor.bad{background:var(--err);color:#fff;animation:sh .35s}
+@keyframes sp{to{transform:rotate(360deg)}}
+@keyframes sh{25%{transform:translateX(-7px)}75%{transform:translateX(7px)}}
+@media(prefers-reduced-motion:reduce){*{animation:none!important}}
+.msg{min-height:20px;font-size:13px;color:var(--mute);margin:4px 0 10px}
+.msg.e{color:var(--err)}.msg.g{color:var(--ok)}
+.pinhead{padding:60px 24px 0;text-align:center}
+.dots{display:flex;gap:14px;justify-content:center;margin:20px 0 6px}
+.dots i{width:14px;height:14px;border-radius:50%;border:2px solid var(--or)}
+.dots i.f{background:var(--or)}
+.pad{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;padding:14px 30px 0}
+.pad button{background:var(--bg);color:var(--ink);font-size:22px;padding:14px}
+.top{background:var(--or);color:#fff;padding:34px 18px 56px;display:flex;justify-content:space-between;align-items:center}
+.top b{font-size:20px}
+.bal{background:var(--surf);margin:-40px 14px 0;border-radius:16px;padding:14px 16px;border:1px solid var(--line);display:flex;justify-content:space-between;align-items:center}
+.bal small{color:var(--mute);font-size:12px}.bal div div{font-size:24px;font-weight:700;margin-top:2px}
+.bal button{background:none;color:var(--mute);padding:6px;font-size:13px}
+.acts{display:grid;grid-template-columns:repeat(4,1fr);gap:8px;padding:16px 14px 6px}
+.acts button{background:none;color:var(--ink);font-size:11px;font-weight:500;padding:6px 0;display:flex;flex-direction:column;align-items:center;gap:6px}
+.acts span{width:46px;height:46px;border-radius:14px;background:var(--soft);display:grid;place-items:center;font-size:20px}
+.body{flex:1;overflow:auto;padding:0 14px 8px}
+.row{display:flex;justify-content:space-between;align-items:center;padding:12px 0;border-bottom:1px solid var(--line);font-size:14px}
+.row small{display:block;color:var(--mute);font-size:12px}
+.sech{display:flex;justify-content:space-between;font-weight:700;font-size:15px;margin:14px 0 2px}
+.tabs{display:flex;border-top:1px solid var(--line);background:var(--surf)}
+.tabs button{flex:1;background:none;color:var(--mute);font-size:11px;padding:10px 0}
+.tabs button.on{color:var(--or)}
+.card{background:var(--bg);border-radius:14px;padding:14px;margin:10px 0;display:flex;justify-content:space-between;align-items:center;gap:12px;font-size:14px}
+.card small{display:block;color:var(--mute);font-size:12px;margin-top:2px}
+.tg{width:48px;height:28px;border-radius:14px;background:var(--line);position:relative;padding:0;flex:none}
+.tg::after{content:"";position:absolute;top:3px;left:3px;width:22px;height:22px;border-radius:50%;background:#fff;transition:left .15s}
+.tg.on{background:var(--ok)}.tg.on::after{left:23px}
+.toast{position:absolute;left:16px;right:16px;bottom:70px;background:#1d1a18;color:#fff;border-radius:12px;padding:11px 14px;font-size:13px;opacity:0;pointer-events:none;transition:opacity .2s;z-index:9}
+.toast.on{opacity:1}
+</style>
+</head>
+<body>
+<p class="note"><b>Prototype with sample data.</b> Demo PIN is <b>1234</b>. Tap through the flow; on the biometric sheet you can simulate a failed scan.</p>
+<div class="phone" id="phone">
+
+  <section class="scr on" id="welcome">
+    <div class="logo"><div class="mark">ন</div><div class="brand">নগদ</div></div>
+    <div class="center">
+      <h1>Welcome back</h1>
+      <p class="sub">Log in to continue</p>
+      <button class="pri" id="bioBtn">Log in with biometric</button>
+      <button class="sec" id="pinBtn">Log in with PIN</button>
+      <p class="foot" id="wfoot">New to Nagad? Register</p>
+    </div>
+  </section>
+
+  <section class="scr" id="pin">
+    <div class="pinhead"><h1>Enter your PIN</h1><p class="msg" id="pmsg">4-digit Nagad PIN</p><div class="dots" id="dots"><i></i><i></i><i></i><i></i></div></div>
+    <div class="pad" id="pad"></div>
+    <button class="lnk" id="pinBack" style="margin-top:10px">Back</button>
+  </section>
+
+  <section class="scr" id="home">
+    <div class="top"><b>নগদ</b><span id="hello" style="font-size:13px">Hi, Masiat</span></div>
+    <div class="bal"><div><small>Balance</small><div id="bal">৳ 12,450.00</div></div><button id="eye">Hide</button></div>
+    <div class="acts">
+      <button data-t="Send money"><span>↗</span>Send Money</button>
+      <button data-t="Cash out"><span>৳</span>Cash Out</button>
+      <button data-t="Mobile recharge"><span>▯</span>Mobile Recharge</button>
+      <button data-t="Payment"><span>▤</span>Payment</button>
+    </div>
+    <div class="body">
+      <div class="sech"><span>Recent transactions</span><span style="color:var(--or);font-weight:500;font-size:13px">See all</span></div>
+      <div class="row"><div>Money sent<small>To Rafiq Hasan · Today, 10:24 AM</small></div><b>৳ 500.00</b></div>
+      <div class="row"><div>Mobile recharge<small>01712 ••• 456 · Yesterday</small></div><b>৳ 100.00</b></div>
+      <div class="row"><div>Cash in<small>From agent · Mon</small></div><b style="color:var(--ok)">+ ৳ 3,000.00</b></div>
+    </div>
+    <div class="tabs"><button class="on">Home</button><button data-t="Transactions">Transactions</button><button data-t="Support">Support</button><button id="moreTab">More</button></div>
+  </section>
+
+  <section class="scr" id="more">
+    <div class="top"><b>More</b><span></span></div>
+    <div class="body" style="padding-top:14px">
+      <div class="card"><div>Biometric login<small>Use fingerprint or Face ID instead of your PIN. You can always log in with your PIN.</small></div><button class="tg on" id="tg" aria-label="Biometric login" role="switch" aria-checked="true"></button></div>
+      <div class="card"><div>Log out<small>You will see the login screen again</small></div><button class="sec" id="out" style="padding:9px 14px">Log out</button></div>
+    </div>
+    <div class="tabs"><button id="homeTab">Home</button><button data-t="Transactions">Transactions</button><button data-t="Support">Support</button><button class="on">More</button></div>
+  </section>
+
+  <div class="sheetwrap" id="sheet">
+    <div class="sheet">
+      <div class="seg"><button class="on" id="mFp">Fingerprint</button><button id="mFace">Face ID</button></div>
+      <h1 style="font-size:18px" id="sTitle">Use your fingerprint</h1>
+      <button class="sensor" id="sensor" aria-label="Scan"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"><path d="M12 3a8 8 0 0 0-8 8v2M20 13v-2a8 8 0 0 0-5-7.4M8 20c0-2 .5-3.5.5-6a3.5 3.5 0 0 1 7 0c0 3 .5 5 1.5 7M12 14c0 3-.5 5-1.5 7M16 8a5 5 0 0 0-8 1"/></svg></button>
+      <p class="msg" id="smsg">Place your finger on the sensor</p>
+      <button class="lnk" id="fail">Simulate failed scan</button>
+      <button class="lnk" id="cancel" style="color:var(--mute)">Cancel</button>
+    </div>
+  </div>
+  <div class="toast" id="toast"></div>
+</div>
+
+<script>
+const $=i=>document.getElementById(i);
+let bioOn=true,mode='fp',fails=0,pin='',hidden=false,busy=false,tm;
+function show(id){document.querySelectorAll('.scr').forEach(s=>s.classList.toggle('on',s.id===id))}
+function toast(t){const e=$('toast');e.textContent=t;e.classList.add('on');clearTimeout(tm);tm=setTimeout(()=>e.classList.remove('on'),1800)}
+function syncWelcome(){
+  $('bioBtn').style.display=bioOn?'':'none';
+  $('pinBtn').className=bioOn?'sec':'pri';
+  $('wfoot').textContent=bioOn?'New to Nagad? Register':'Biometric login is off. Turn it on in More after you log in.';
+}
+function openSheet(){fails=0;setMode(mode);$('sheet').classList.add('on')}
+function closeSheet(){$('sheet').classList.remove('on');busy=false}
+function setMode(m){
+  mode=m;$('mFp').classList.toggle('on',m==='fp');$('mFace').classList.toggle('on',m==='face');
+  $('sTitle').textContent=m==='fp'?'Use your fingerprint':'Use Face ID';
+  $('smsg').textContent=m==='fp'?'Place your finger on the sensor':'Look at your phone';
+  $('smsg').className='msg';$('sensor').className='sensor';
+}
+function scan(ok){
+  if(busy)return;busy=true;
+  const s=$('sensor'),m=$('smsg');
+  s.className='sensor scan';m.className='msg';m.textContent='Scanning…';
+  setTimeout(()=>{
+    if(ok){
+      s.className='sensor ok';m.className='msg g';m.textContent='Verified';
+      setTimeout(()=>{closeSheet();enter()},650);
+    }else{
+      fails++;s.className='sensor bad';m.className='msg e';busy=false;
+      if(fails>=3){m.textContent='Too many tries. Use your PIN instead.';setTimeout(()=>{closeSheet();toPin('Biometric failed. Enter your PIN.')},900)}
+      else m.textContent='Not recognised. Try again ('+fails+' of 3).';
+    }
+  },950);
+}
+function enter(){busy=false;show('home');toast('Logged in')}
+function toPin(msg){pin='';drawDots();$('pmsg').className='msg';$('pmsg').textContent=msg||'4-digit Nagad PIN';show('pin')}
+function drawDots(){[...$('dots').children].forEach((d,i)=>d.classList.toggle('f',i<pin.length))}
+const keys=['1','2','3','4','5','6','7','8','9','','0','⌫'];
+keys.forEach(k=>{const b=document.createElement('button');b.textContent=k;if(!k)b.style.visibility='hidden';
+  b.onclick=()=>{
+    if(k==='⌫')pin=pin.slice(0,-1);else if(pin.length<4)pin+=k;
+    drawDots();
+    if(pin.length===4){setTimeout(()=>{
+      if(pin==='1234')enter();
+      else{pin='';drawDots();$('pmsg').className='msg e';$('pmsg').textContent='Wrong PIN. Try 1234.'}
+    },180)}
+  };$('pad').appendChild(b)});
+
+$('bioBtn').onclick=openSheet;
+$('pinBtn').onclick=()=>toPin();
+$('pinBack').onclick=()=>show('welcome');
+$('sensor').onclick=()=>scan(true);
+$('fail').onclick=()=>scan(false);
+$('cancel').onclick=closeSheet;
+$('mFp').onclick=()=>{if(!busy)setMode('fp')};
+$('mFace').onclick=()=>{if(!busy)setMode('face')};
+$('eye').onclick=()=>{hidden=!hidden;$('bal').textContent=hidden?'৳ ••••••':'৳ 12,450.00';$('eye').textContent=hidden?'Show':'Hide'};
+document.querySelectorAll('[data-t]').forEach(b=>b.onclick=()=>toast(b.dataset.t+' is not part of this prototype'));
+$('moreTab').onclick=()=>show('more');
+$('homeTab').onclick=()=>show('home');
+$('tg').onclick=()=>{bioOn=!bioOn;$('tg').classList.toggle('on',bioOn);$('tg').setAttribute('aria-checked',bioOn);toast(bioOn?'Biometric login turned on':'Biometric login turned off');syncWelcome()};
+$('out').onclick=()=>{syncWelcome();show('welcome')};
+syncWelcome();
+</script>
+</body>
+</html>
